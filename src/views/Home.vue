@@ -94,6 +94,33 @@ const likeMessage = async (id: number) => {
   }
 };
 
+/**
+ * 删除留言
+ * @param id 留言 ID
+ */
+const deleteMessage = async (id: number) => {
+  if (!confirm('确定要删除这条留言吗？')) {
+    return;
+  }
+
+  try {
+    const response = await fetch(`/api/messages/${id}`, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json', 'x-admin-key': 'loremipsum233SecretKey' },
+    });
+
+    if (!response.ok) {
+      throw new Error(`删除失败: ${response.statusText}`);
+    }
+
+    alert('留言已成功删除');
+    await fetchMessages(); // 删除成功后重新获取列表
+  } catch (error) {
+    console.error('删除留言出错:', error);
+    alert(error instanceof Error ? error.message : '删除过程中发生了未知错误');
+  }
+};
+
 // 组件挂载时获取列表
 onMounted(() => {
   fetchMessages();
@@ -142,10 +169,16 @@ onMounted(() => {
           <li v-for="msg in messages" :key="msg._id" class="message-item">
             <div class="message-content">{{ msg.text }}</div>
             <div class="message-footer">
-              <button @click="likeMessage(msg._id)" class="like-btn">
-                <span class="heart">❤️</span>
-                <span class="like-count">{{ msg.likes || 0 }}</span>
-              </button>
+              <div class="actions">
+                <button @click="likeMessage(msg._id)" class="like-btn">
+                  <span class="heart">❤️</span>
+                  <span class="like-count">{{ msg.likes || 0 }}</span>
+                </button>
+                <button @click="deleteMessage(msg._id)" class="delete-btn">
+                  <span>🗑️</span>
+                  <span>删除</span>
+                </button>
+              </div>
             </div>
           </li>
         </ul>
@@ -255,7 +288,12 @@ textarea:focus {
   justify-content: flex-end;
 }
 
-.like-btn {
+.actions {
+  display: flex;
+  gap: 0.8rem;
+}
+
+.like-btn, .delete-btn {
   background-color: white;
   border: 1px solid #ddd;
   padding: 0.3rem 0.8rem;
@@ -272,6 +310,12 @@ textarea:focus {
   border-color: #ff4757;
   color: #ff4757;
   background-color: #fffafb;
+}
+
+.delete-btn:hover {
+  border-color: #ff4757;
+  color: #ff4757;
+  background-color: #fff1f2;
 }
 
 .heart {
